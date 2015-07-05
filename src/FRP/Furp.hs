@@ -109,5 +109,3 @@ type family EventOut m (sv :: SignalVector *) where
 
 newtype SignalFunction m svIn svOut =
   SignalFunction { _signalFunction :: SignalIn m (SignalIn m svIn (EventIn m svOut (SignalOut svOut, EventOut svIn)))
-
-
