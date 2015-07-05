@@ -110,7 +110,10 @@ type family EventOut m (sv :: SignalVector *) (unit :: *) where
 newtype SignalFunction m svIn svOut =
   SignalFunction {
     _signalFunction :: SignalIn m svIn
-                       (EventIn m svOut (m ((SignalOut svOut, SignalFunction m svIn svOut), EventOut m svIn (SignalFunction m svIn svOut))))
+                       (EventIn m svOut
+                        (m ((SignalOut svOut,
+                             SignalFunction m svIn svOut),
+                            EventOut m svIn (SignalFunction m svIn svOut))))
     }
 
 hold :: SignalFunction m (Temp (Event a)) (Temp (Signal a))
