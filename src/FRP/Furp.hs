@@ -2,6 +2,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module FRP.Furp where
 
@@ -62,19 +63,41 @@ type family InterpSV m (sv :: SignalVector *) where
   InterpSV m (Product sv1 sv2) = (InterpSV m sv1, InterpSV m sv2)
 
 -- newtype SignalFunction m (svIn :: SignalVector *) (svOut :: SignalVector *) =
---   SignalFunction (InterpSV m svIn -> (InterpSV m svOut, SignalFunction m svIn svOut))
+--   SignalFunction (InterpSV m svIn
+--               -> (InterpSV m svOut, SignalFunction m svIn svOut))
 
-newtype SignalFunction m (svIn :: SignalVector *) (svOut :: SignalVector *) =
-  SignalFunction (InterpSV m svIn -> InterpSV m svOut)
+-- newtype SignalFunction m (svIn :: SignalVector *) (svOut :: SignalVector *) =
+--   SignalFunction (InterpSV m svIn -> InterpSV m svOut)
 
-compSV :: SignalFunction m b c
-       -> SignalFunction m a b
-       -> SignalFunction m a c
-compSV (SignalFunction b)
-       (SignalFunction a) =
-  SignalFunction (b . a)
+-- compSV :: SignalFunction m b c
+--        -> SignalFunction m a b
+--        -> SignalFunction m a c
+-- compSV (SignalFunction b)
+--        (SignalFunction a) =
+--   SignalFunction (b . a)
 
 -- hold :: a -> SignalFunction m (Event a) (Signal a)
 -- hold = undefined
+
+type family In m (sv :: SignalVector *) (k :: *) where
+  In m (Temp (Signal a)) k = m a -> k
+  In m (Temp (Event a)) k = (a -> m ()) -> k
+  In m (Temp None) k = k
+  In m (Product sv1 sv2) k = In m sv1 (In m sv2 k)
+
+type family SignalOut (sv :: SignalVector *) where
+  SignalOut (Temp (Signal a)) = a
+  SignalOut (Temp (Event a)) = ()
+  SignalOut (Temp None) = ()
+  SignalOut (Product sv1 sv2) = (SignalOut sv1, SignalOut sv2)
+
+type family EventOut m (sv :: SignalVector *) where
+  EventOut m (Temp (Signal a)) = ()
+  EventOut m (Temp (Event a)) = a -> m ()
+  EventOut m (Temp None) = ()
+  EventOut m (Product sv1 sv2) = ()
+
+type SignalFunction m svIn svOut =
+  In m svIn (m (SignalOut svOut), EventOut m svOut)
 
 main = putStrLn "lol"
