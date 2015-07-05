@@ -80,7 +80,7 @@ type family InterpSV m (sv :: SignalVector *) where
 -- hold = undefined
 
 -- Inputs to the SF implementation function from the input-side sv
-type family SignalIn m (sv :: SignalVector *) ((k :: *) where
+type family SignalIn m (sv :: SignalVector *) (k :: *) where
   SignalIn m (Temp (Signal a)) k = m a -> k
   SignalIn m (Temp (Event a)) k =  k
   SignalIn m (Temp None) k = k
@@ -97,8 +97,8 @@ type family SignalOut (sv :: SignalVector *) where
 type family EventIn m (sv :: SignalVector *) k where
   EventIn m (Temp (Event a)) k = (a -> m ()) -> k
   EventIn m (Temp (Signal a)) k = k
-  EventIn m (Temp None) = k
-  EventIn m (Product sv1 sv2) = EventIn m sv1 (EventIn m sv2 k)
+  EventIn m (Temp None) k = k
+  EventIn m (Product sv1 sv2) k = EventIn m sv1 (EventIn m sv2 k)
 
 -- Outputs from the input-side sv
 type family EventOut m (sv :: SignalVector *) where
@@ -108,4 +108,7 @@ type family EventOut m (sv :: SignalVector *) where
   EventOut m (Product sv1 sv2) = (EventOut m sv1, EventOut m sv2)
 
 newtype SignalFunction m svIn svOut =
-  SignalFunction { _signalFunction :: SignalIn m (SignalIn m svIn (EventIn m svOut (SignalOut svOut, EventOut svIn)))
+  SignalFunction {
+    _signalFunction :: SignalIn m svIn
+                       (EventIn m svOut (SignalOut svOut, EventOut m svIn))
+    }
