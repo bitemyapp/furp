@@ -101,14 +101,17 @@ type family EventIn m (sv :: SignalVector *) k where
   EventIn m (Product sv1 sv2) k = EventIn m sv1 (EventIn m sv2 k)
 
 -- Outputs from the input-side sv
-type family EventOut m (sv :: SignalVector *) where
-  EventOut m (Temp (Signal a)) = ()
-  EventOut m (Temp (Event a)) = a -> m ()
-  EventOut m (Temp None) = ()
-  EventOut m (Product sv1 sv2) = (EventOut m sv1, EventOut m sv2)
+type family EventOut m (sv :: SignalVector *) (unit :: *) where
+  EventOut m (Temp (Signal a)) unit = ()
+  EventOut m (Temp (Event a)) unit = a -> m unit
+  EventOut m (Temp None) unit = ()
+  EventOut m (Product sv1 sv2) unit = (EventOut m sv1 unit, EventOut m sv2 unit)
 
 newtype SignalFunction m svIn svOut =
   SignalFunction {
     _signalFunction :: SignalIn m svIn
-                       (EventIn m svOut (SignalOut svOut, EventOut m svIn))
+                       (EventIn m svOut (m ((SignalOut svOut, SignalFunction m svIn svOut), EventOut m svIn (SignalFunction m svIn svOut))))
     }
+
+hold :: SignalFunction m (Temp (Event a)) (Temp (Signal a))
+hold = SignalFunction _holdSignalFunction
