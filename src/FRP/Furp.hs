@@ -31,10 +31,10 @@ type family Discrete' (t :: Temporal *) where
   Discrete' (Signal a) = ()
   Discrete' None       = ()
 
-newtype Continuous m a =
+newtype Continuous a =
   Continuous { _continuous :: Continuous' a }
 
-newtype Discrete m a =
+newtype Discrete a =
   Discrete { _discrete :: Discrete' a }
 
 type ContinuousK sv a = K Continuous sv a
